@@ -2,6 +2,7 @@
 
 namespace App\Spiders;
 
+use App\Spiders\Processors\DownloadImages;
 use Generator;
 use RoachPHP\Downloader\Middleware\RequestDeduplicationMiddleware;
 use RoachPHP\Extensions\LoggerExtension;
@@ -25,7 +26,7 @@ class ReadOnePieceCom extends BasicSpider
     ];
 
     public array $itemProcessors = [
-        //
+        DownloadImages::class
     ];
 
     public array $extensions = [
@@ -42,30 +43,44 @@ class ReadOnePieceCom extends BasicSpider
      */
     public function parse(Response $response): Generator
     {
-
         $links = $response->filter('body a.mt-3')->links();
 
-        foreach ($links as $link) {
-            $chapterLinks[] = $link->getUri();
+        yield $this->request(
+            'GET',
+            $links[0]->getUri(),
+            'parseChapter'
+        );
 
+        foreach ($links as $link) {
             yield $this->request(
                 'GET',
                 $link->getUri(),
                 'parseChapter'
             );
         }
-
-        yield $this->item($chapterLinks ?? []);
-
-//        yield
     }
 
     public function parseChapter(Response $response): Generator
     {
-//        dd($response->html());
         $images = $response->filter('.js-pages-container img')->images();
-        dd($images[10]->getUri());
+        $chapter = $response->filter('body #top > h1')->text();
+        $chapterNumber = $this->parseChapterNumber($chapter);
 
-        yield $this->item([]);
+        foreach ($images as $image) {
+            $links[] = $image->getUri();
+        }
+
+        yield $this->item([
+            'links' => $links ?? [],
+            'chapter' => $chapterNumber,
+        ]);
+    }
+
+    private function parseChapterNumber(string $chapter): int
+    {
+        $matches = '';
+        preg_match('/\d+/', $chapter, $matches);
+
+        return $matches[0] ?? '';
     }
 }
