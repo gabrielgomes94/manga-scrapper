@@ -58,16 +58,11 @@ abstract class BaseReadOnePieceCom extends BasicSpider
 
     public function parseChapter(Response $response): Generator
     {
-        $images = $response->filter('.js-pages-container img')->images();
         $chapter = $response->filter('body #top > h1')->text();
         $chapterNumber = $this->parseChapterNumber($chapter);
+        $links = $this->parseImages($response);
 
-        foreach ($images as $image) {
-            $links[] = $image->getUri();
-        }
-
-        echo "==================================\n";
-        echo "$chapter ===> Downloading...\n";
+        $this->echoDownloadStart($chapter);
 
         yield $this->item([
             'links' => $links ?? [],
@@ -75,7 +70,7 @@ abstract class BaseReadOnePieceCom extends BasicSpider
             'chapter' => $chapterNumber,
         ]);
 
-        echo "$chapter ===> Download finished\n\n";
+        $this->echoDownloadFinish($chapter);
     }
 
     private function parseChapterNumber(string $chapter): int
@@ -84,5 +79,27 @@ abstract class BaseReadOnePieceCom extends BasicSpider
         preg_match('/\d+/', $chapter, $matches);
 
         return $matches[0] ?? '';
+    }
+
+    private function parseImages(Response $response): array
+    {
+        $images = $response->filter('.js-pages-container img')->images();
+
+        foreach ($images as $image) {
+            $links[] = $image->getUri();
+        }
+
+        return $links ?? [];
+    }
+
+    private function echoDownloadStart(string $chapter): void
+    {
+        echo "==================================\n";
+        echo "$chapter ===> Downloading...\n";
+    }
+
+    private function echoDownloadFinish(string $chapter): void
+    {
+        echo "$chapter ===> Download finished\n\n";
     }
 }
