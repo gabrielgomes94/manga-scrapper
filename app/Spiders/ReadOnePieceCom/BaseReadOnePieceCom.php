@@ -47,12 +47,6 @@ abstract class BaseReadOnePieceCom extends BasicSpider
     {
         $links = $response->filter('body a.mt-3')->links();
 
-        yield $this->request(
-            'GET',
-            $links[0]->getUri(),
-            'parseChapter'
-        );
-
         foreach ($links as $link) {
             yield $this->request(
                 'GET',
