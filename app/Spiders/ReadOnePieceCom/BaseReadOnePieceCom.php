@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Spiders;
+namespace App\Spiders\ReadOnePieceCom;
 
 use App\Processors\DownloadImages;
 use Generator;
@@ -11,10 +11,12 @@ use RoachPHP\Http\Response;
 use RoachPHP\Spider\BasicSpider;
 use RoachPHP\Spider\ParseResult;
 
-class ReadOnePieceCom extends BasicSpider
+abstract class BaseReadOnePieceCom extends BasicSpider
 {
+    protected string $name = '';
+
     public array $startUrls = [
-        'https://ww10.readonepiece.com/manga/one-piece-digital-colored-comics/'
+        //
     ];
 
     public array $downloaderMiddleware = [
@@ -34,7 +36,7 @@ class ReadOnePieceCom extends BasicSpider
         StatsCollectorExtension::class,
     ];
 
-    public int $concurrency = 2;
+    public int $concurrency = 4;
 
     public int $requestDelay = 2;
 
@@ -70,10 +72,16 @@ class ReadOnePieceCom extends BasicSpider
             $links[] = $image->getUri();
         }
 
+        echo "==================================\n";
+        echo "$chapter ===> Downloading...\n";
+
         yield $this->item([
             'links' => $links ?? [],
+            'name' => $this->name,
             'chapter' => $chapterNumber,
         ]);
+
+        echo "$chapter ===> Download finished\n\n";
     }
 
     private function parseChapterNumber(string $chapter): int

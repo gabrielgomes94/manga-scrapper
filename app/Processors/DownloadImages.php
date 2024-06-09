@@ -2,8 +2,10 @@
 
 namespace App\Processors;
 
+use Illuminate\Support\Facades\Log;
 use RoachPHP\ItemPipeline\ItemInterface;
 use RoachPHP\ItemPipeline\Processors\ItemProcessorInterface;
+use Throwable;
 
 class DownloadImages implements ItemProcessorInterface
 {
@@ -19,18 +21,24 @@ class DownloadImages implements ItemProcessorInterface
     public function processItem(ItemInterface $item): ItemInterface
     {
         $chapter = 'cap_' . $item['chapter'];
-        $directory = "storage/app/public/$chapter/";
-
-        echo "Baixando $chapter...\n";
+        $name = $item['name'];
+        $directory = "storage/app/public/$name/$chapter/";
 
         foreach ($item['links'] as $key => $link) {
-            if (!is_dir($directory)) {
-                mkdir($directory);
-            }
-
+            is_dir($directory) || mkdir($directory, 0777, true);
             $extension = pathinfo($link)['extension'];
 
-            copy($link, "storage/app/public/$chapter/$key.$extension");
+            try {
+                copy($link, "$directory/$key.$extension");
+            } catch (Throwable $throwable) {
+                Log::info(
+                    "Error while downloading $chapter on $name",
+                    [
+                        'type' => $throwable::class,
+                        'message' => $throwable->getMessage(),
+                    ]
+                );
+            }
         }
 
         return $item;
