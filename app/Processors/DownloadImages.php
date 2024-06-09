@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Spiders\Processors;
+namespace App\Processors;
 
 use RoachPHP\ItemPipeline\ItemInterface;
 use RoachPHP\ItemPipeline\Processors\ItemProcessorInterface;

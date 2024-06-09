@@ -2,7 +2,7 @@
 
 namespace App\Spiders;
 
-use App\Spiders\Processors\DownloadImages;
+use App\Processors\DownloadImages;
 use Generator;
 use RoachPHP\Downloader\Middleware\RequestDeduplicationMiddleware;
 use RoachPHP\Extensions\LoggerExtension;
